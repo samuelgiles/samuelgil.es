@@ -39,6 +39,7 @@ function samuelgil_client(){
 	var self = this;
 	self.socket = null;
 	self.localPlayer = null;
+	self.players = [];
 	self.keyTable = {
 		38: "up",
 		40: "down",
@@ -46,6 +47,7 @@ function samuelgil_client(){
 		39: "right",
 		32: "space"
 	}
+	self.keyTracker = {}
 	self.init = function(){
 
 		self.socket = io.connect("http://localhost", {port: 8000, transports: ["websocket"]});
@@ -63,51 +65,20 @@ function samuelgil_client(){
 	self.setupEvents = function(){
 
 		$(document).keydown(function(e) {
-
-			switch(self.keyTable[e.keyCode]){
-				case "up":
-					console.log("UP : DOWN");
-				break;
-				case "down":
-					console.log("DOWN : DOWN");
-				break;
-				case "left":
-					console.log("LEFT : DOWN");
-				break;
-				case "right":
-					console.log("RIGHT : DOWN");
-				break;
-				case "space":
-					console.log("SPACE : DOWN");
-				break;
-			}
-
+			self.keyTracker[e.keyCode] = true;
 		}).keyup(function(e) {
-
-			switch(self.keyTable[e.keyCode]){
-				case "up":
-					console.log("UP : UP");
-				break;
-				case "down":
-					console.log("DOWN : UP");
-				break;
-				case "left":
-					console.log("LEFT : UP");
-				break;
-				case "right":
-					console.log("RIGHT : UP");
-				break;
-				case "space":
-					console.log("SPACE : UP");
-				break;
-			}
-
-		})
+			self.keyTracker[e.keyCode] = false;
+		});
 
 	}
 
 	self.calculate = function(){
 
+		var iNumberOfPlayers = self.players.length;
+		var oCurrentPlayer = null;
+		for (var i = 0; i < iNumberOfPlayers; i++) {
+			self.players[i].tick();
+		}
 
 	}
 
@@ -141,8 +112,8 @@ function player(){
 	self.init = function(){
 		console.log("Hello!");
 	}
-	self.move = function(){
-
+	self.tick = function(){
+		console.log("Tick");
 	}
 	self.init();
 

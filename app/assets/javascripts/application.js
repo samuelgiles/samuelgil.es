@@ -13,3 +13,27 @@
 //= require jquery
 //= require jquery_ujs
 //= require_tree .
+
+function samuelgil_client(){
+
+	var self = this;
+	self.socket = null;
+
+	self.init = function(){
+
+		self.socket = io.connect("http://localhost", {port: 8000, transports: ["websocket"]});
+		self.socket.on("connect", self.socketConnected);
+
+	}
+	self.socketConnected = function(){
+		console.log("Connected to socket server");
+	}
+	self.init();
+
+}
+
+$(document).ready(function(){
+
+	window.samuelgil = new samuelgil_client();
+
+});

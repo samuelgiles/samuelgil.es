@@ -52,6 +52,10 @@ function samuelgil_client(){
 
 		self.socket = io.connect("http://localhost", {port: 8000, transports: ["websocket"]});
 		self.socket.on("connect", self.socketConnected);
+		self.socket.on("hello", self.helloWorld);
+		self.socket.on("tick", self.helloWorld);
+		self.socket.on("welcome", self.configurePlayer);
+		//self.socket.on("chat down", onMovePlayer);
 		self.draw();
 
 	}
@@ -61,7 +65,13 @@ function samuelgil_client(){
 		//Now that the player is setup we can attach keyboard events to events inside the player:
 		self.setupEvents();
 	}
-
+	self.helloWorld = function(data){
+		console.log(data);
+	}
+	self.configurePlayer = function(data){
+		console.log("configure")
+		console.log(data);
+	}
 	self.setupEvents = function(){
 
 		$(document).keydown(function(e) {
@@ -81,10 +91,18 @@ function samuelgil_client(){
 		}
 
 	}
+	self.addPlayer = function(oPlayer){
 
+	}
+	self.removePlayer = function(oPlayer){
+
+	}
 	self.draw = function(){
 
 		self.calculate();
+
+
+
 		window.requestAnimationFrame(self.draw);
 
 	}
@@ -109,11 +127,49 @@ function player(){
 		body: 0,
 		feet: 0
 	}
+	self.animation = {
+		animations: {
+			"walk-left": [{"x": 0, "y": 0}, {"x": 0, "y": 0}]
+		},
+		current: "walk-left",
+		step: 0
+	}
 	self.init = function(){
 		console.log("Hello!");
 	}
 	self.tick = function(){
-		console.log("Tick");
+		
+		var targetAnimation = "static";
+
+		if(self.speed.y > 0){
+			targetAnimation = "jump-static";
+		}
+
+		//Work out the animation the player should be on:
+		if(self.speed.x > 0){
+			
+			targetAnimation = "walk-right";
+
+			if(self.speed.y > 0){
+				targetAnimation = "jump-right";
+			}
+
+		}
+		else if(self.speed.x < 0){
+			
+			targetAnimation = "walk-left";
+
+			if(self.speed.y > 0){
+				targetAnimation = "jump-left";
+			}
+
+		}
+
+
+
+	}
+	self.chat = function(message){
+
 	}
 	self.init();
 

@@ -39,7 +39,10 @@ function samuelgil_client(){
 	var self = this;
 	self.socket = null;
 	self.localPlayer = null;
+	self.connected = false;
+	self.container = $("#live-container");
 	self.players = [];
+	self.floor = 0;
 	self.keyTable = {
 		38: "up",
 		40: "down",
@@ -50,11 +53,19 @@ function samuelgil_client(){
 	self.keyTracker = {}
 	self.init = function(){
 
-		self.socket = io.connect("http://localhost", {port: 8000, transports: ["websocket"]});
+		$(window).resize(function(){
+			self.resize();
+		});
+		self.resize();
+
+		self.socket = io.connect("http://192.168.1.2", {port: 8000, transports: ["websocket"]});
 		self.socket.on("connect", self.socketConnected);
 		self.socket.on("hello", self.helloWorld);
-		self.socket.on("tick", self.helloWorld);
+		self.socket.on("tick", self.gatherData);
 		self.socket.on("welcome", self.configurePlayer);
+		self.socket.on("setup", self.setupPlayers);
+		self.socket.on("newplayer", self.addPlayer);
+		self.socket.on("remove", self.removePlayer);
 		//self.socket.on("chat down", onMovePlayer);
 		self.draw();
 
@@ -62,15 +73,57 @@ function samuelgil_client(){
 	self.socketConnected = function(){
 		console.log("Connected to socket server");
 		self.localPlayer = new player();
+		self.localPlayer.local = true;
 		//Now that the player is setup we can attach keyboard events to events inside the player:
 		self.setupEvents();
 	}
 	self.helloWorld = function(data){
 		console.log(data);
 	}
+	self.setupPlayers = function(data){
+
+		var iNumberOfPlayers = data.length;
+		for (var i = 0; i < iNumberOfPlayers; i++) {
+
+			var oCurrentPlayerData = data[i];
+			var oCurrentPlayer = new player();
+			oCurrentPlayer.id = oCurrentPlayerData.id;
+			oCurrentPlayer.position = oCurrentPlayerData.position;
+			oCurrentPlayer.speed = oCurrentPlayerData.speed;
+
+			oCurrentPlayer.addToDOM();
+			self.players.push(oCurrentPlayer);
+
+		}
+
+	}
+	self.gatherData = function(data){
+
+		//Loop through this data and make changes to local data:
+		var iNumberOfPlayers = data.length;
+		for (var i = 0; i < iNumberOfPlayers; i++) {
+
+			var iPosInIndex = self.getPlayer(data[i].id);
+
+			if(iPosInIndex != false){
+				
+				self.players[self.getPlayer(data[i].id)].position = data[i].position;
+				self.players[self.getPlayer(data[i].id)].speed = data[i].speed;
+			}
+
+		}
+
+		//After receiving the gather data, the client sends its data back to the server:
+		self.socket.emit("sync", {"id": self.localPlayer.id, "position": self.localPlayer.position, "speed": self.localPlayer.speed});
+
+	}
 	self.configurePlayer = function(data){
-		console.log("configure")
-		console.log(data);
+		self.localPlayer.id = data.id;
+		self.localPlayer.position = data.position;
+		self.localPlayer.speed = data.speed;
+		self.localPlayer.configuration = data.configuration;
+		self.localPlayer.addToDOM();
+		self.connected = true;
 	}
 	self.setupEvents = function(){
 
@@ -81,7 +134,10 @@ function samuelgil_client(){
 		});
 
 	}
-
+	self.resize = function(){
+		$(self.container).css({"height": $(window).height() + "px", "width": $(window).width() + "px"});
+		self.floor = $(self.container).height();
+	}
 	self.calculate = function(){
 
 		var iNumberOfPlayers = self.players.length;
@@ -90,20 +146,57 @@ function samuelgil_client(){
 			self.players[i].tick();
 		}
 
+		if(self.connected){
+
+			self.localPlayer.tick();
+			$(self.localPlayer.element).css({"left": self.localPlayer.position.x, "bottom": self.localPlayer.position.y});
+
+		}
+		//Loop through players array, find matching DOM elements, first get a cached version of the players onscreen:
+		for (var i = 0; i < iNumberOfPlayers; i++) {
+
+			var oCurrentPlayerData = self.players[i];
+
+			$(self.players[i].element).css({"left": oCurrentPlayerData.position.x, "bottom": oCurrentPlayerData.position.y});
+
+		}
+
 	}
 	self.addPlayer = function(oPlayer){
 
+		var newPlayer = new player();
+		newPlayer.id = oPlayer.id;
+		newPlayer.position = oPlayer.position;
+		newPlayer.speed = oPlayer.speed;
+		newPlayer.configuration = oPlayer.configuration;
+
+		newPlayer.addToDOM();
+		self.players.push(newPlayer);
+
 	}
-	self.removePlayer = function(oPlayer){
+	self.removePlayer = function(sPlayerID){
+
+		var iPosInIndex = self.getPlayer(sPlayerID.id);
+		self.players[iPosInIndex].removeFromDOM();
+		self.players.splice(iPosInIndex, 1);
 
 	}
 	self.draw = function(){
 
 		self.calculate();
 
-
-
 		window.requestAnimationFrame(self.draw);
+
+	}
+	self.getPlayer = function(clientID){
+		
+		var i;
+		for (i = 0; i < self.players.length; i++) {
+		if (self.players[i].id == clientID)
+			return i;
+		};
+
+		return false;
 
 	}
 
@@ -114,6 +207,7 @@ function player(){
 
 	var self = this;
 	self.id = "";
+	self.local = false;
 	self.position = {
 		x: 0,
 		y: 0
@@ -122,6 +216,9 @@ function player(){
 		x: 0,
 		y: 0
 	}
+	self.element = null;
+	self.animationSpeed = 0.2;
+	self.jumping = false;
 	self.configuration = {
 		head: 0,
 		body: 0,
@@ -129,9 +226,14 @@ function player(){
 	}
 	self.animation = {
 		animations: {
-			"walk-left": [{"x": 0, "y": 0}, {"x": 0, "y": 0}]
+			"walk-left": [{"x": 5, "y": 456}, {"x": 80, "y": 456}, {"x": 155, "y": 456}, {"x": 230, "y": 456}, {"x": 305, "y": 456}, {"x": 380, "y": 456}, {"x": 455, "y": 456}],
+			"walk-right": [{"x": 5, "y": 156}, {"x": 80, "y": 156}, {"x": 155, "y": 156}, {"x": 230, "y": 156}, {"x": 305, "y": 156}, {"x": 380, "y": 156}, {"x": 455, "y": 156}],
+			"static": [{"x": 5, "y": 6}],
+			"jump-right": [{"x": 5, "y": 307}],
+			"jump-left": [{"x": 5, "y": 606}],
+			"jump-static": [{"x": 5, "y": 751}]
 		},
-		current: "walk-left",
+		current: "static",
 		step: 0
 	}
 	self.init = function(){
@@ -139,6 +241,56 @@ function player(){
 	}
 	self.tick = function(){
 		
+		if(self.local){
+
+			self.speed.x = 0;
+
+			if(samuelgil.keyTracker[37]){
+				self.speed.x = -5;
+			}
+			else if(samuelgil.keyTracker[39]){
+				self.speed.x = 5;
+			}
+
+			if(samuelgil.keyTracker[38]){
+				self.jumping = true;
+				self.speed.y = 10;
+			}
+
+			self.position.x = self.position.x + self.speed.x;
+			self.position.y = self.position.y + self.speed.y;
+
+			if(self.position.y > 0){
+				self.speed.y--;
+			}
+			else{
+				self.speed.y = 0;
+			}
+			if(self.position.y < 0){
+				self.position.y = 0;
+			}
+		}
+		else{
+			self.position.x = self.position.x + (self.speed.x/1.5);
+			self.position.y = self.position.y + (self.speed.y/1.5);
+		}
+
+		
+		self.animate();
+
+	}
+	self.removeFromDOM = function(){
+		$(self.element).remove();
+		self.element = null;
+	}
+	self.addToDOM = function(){
+
+		self.element = $("<div class=\"player\" id=\"" + self.id + "\"></div>");
+		$(samuelgil.container).append(self.element);
+
+	}
+	self.animate = function(){
+
 		var targetAnimation = "static";
 
 		if(self.speed.y > 0){
@@ -165,7 +317,28 @@ function player(){
 
 		}
 
+		if(self.animation.current == targetAnimation){
+			if(self.animation.step+self.animationSpeed > self.animation.animations[targetAnimation].length){
+				self.animation.step = 0;
+			}
+			else{
+				self.animation.step = self.animation.step+self.animationSpeed;
+			}
+		}
+		else{
+			self.animation.current = targetAnimation;
+			self.animation.step = 0;
+		}
 
+		if(self.animation.animations[self.animation.current].length == 1){
+			self.animation.step = 0;
+		}
+
+		$(self.element).css("background-position", "-" + self.animation.animations[self.animation.current][Math.floor(self.animation.step)].x + "px -" + self.animation.animations[self.animation.current][Math.floor(self.animation.step)].y + "px");
+
+		//console.log([self.animation.step])
+
+		//
 
 	}
 	self.chat = function(message){

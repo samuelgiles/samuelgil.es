@@ -31,7 +31,6 @@ height: 0;
 .main-font{
 	font-family: "proxima-nova", "Helvetica-Neue", Helvetica, Arial, sans-serif;
 }
-
 body{
 	.main-font;
 	background-color: #279cb0;
@@ -93,6 +92,24 @@ p{
 .container{
 	width:100%;
 	padding: 2%;
+	.front;
+	z-index: 1;
+}
+#live-container{
+	position: absolute;
+	left:0px;
+	z-index: 0;
+	top:0px;
+	width:100%;
+	overflow:hidden;
+	height:100%;
+}
+.player{
+	width: 65px;
+	height: 138px;
+	background-image: asset-url("player-sheet.png");
+	background-repeat: no-repeat;
+	position: absolute;
 }
 @media (max-width: 700px) {
 	#home{

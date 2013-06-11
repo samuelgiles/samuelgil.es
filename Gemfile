@@ -21,6 +21,7 @@ group :assets do
 end
 
 gem 'jquery-rails'
+gem 'soundmanager-rails', :git => 'git://github.com/glaszig/soundmanager-rails.git'
 
 gem 'therubyracer', :platforms => :ruby
 gem 'less-rails'

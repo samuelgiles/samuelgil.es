@@ -1,3 +1,9 @@
+GIT
+  remote: git://github.com/glaszig/soundmanager-rails.git
+  revision: e2e403836982bb010df38f038e64f4ba013da3cf
+  specs:
+    soundmanager-rails (0.1.5)
+
 GEM
   remote: https://rubygems.org/
   specs:
@@ -120,6 +126,7 @@ DEPENDENCIES
   less-rails
   rails (= 3.2.12)
   sass-rails (~> 3.2.3)
+  soundmanager-rails!
   sqlite3
   therubyracer
   uglifier (>= 1.0.3)

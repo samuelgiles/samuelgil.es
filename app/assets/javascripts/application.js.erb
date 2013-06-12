@@ -71,7 +71,7 @@ function samuelgil_client(){
   			self.loadSounds();
 		});
 
-		self.socket = io.connect("http://ec2-174-129-98-148.compute-1.amazonaws.com", {port: 8000, transports: ["websocket"]});
+		self.socket = io.connect("http://samuelgil.es", {port: 8000, transports: ["websocket"]});
 		self.socket.on("connect", self.socketConnected);
 		self.socket.on("hello", self.helloWorld);
 		self.socket.on("tick", self.gatherData);

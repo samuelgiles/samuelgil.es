@@ -424,7 +424,11 @@ function player(){
 		var sChatSound = Math.floor(Math.random()*3) + 1;
 		samuelgil.sounds["chat" + sChatSound].play();
 
-		$(self.element).html("<p>" + message + "</p>");
+		var oChat = $("<p></p>");
+
+		$(oChat).text(message);
+
+		$(self.element).html($(oChat));
 		$("p", self.element).delay(6000).fadeOut(300);
 
 	}

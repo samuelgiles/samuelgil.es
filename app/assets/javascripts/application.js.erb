@@ -178,10 +178,14 @@ function samuelgil_client(){
 		var iNumberOfPlayers = data.length;
 		for (var i = 0; i < iNumberOfPlayers; i++) {
 
+			//console.log(data[i].id);
+			//icE_zSHmfp9JfRvPZoyW
+			//GPYT5hf3Yz6khskZoyd
+			//
 			var iPosInIndex = self.getPlayer(data[i].id);
 
-			if(iPosInIndex != false){
-				
+			if(iPosInIndex !== false){
+
 				self.players[self.getPlayer(data[i].id)].position = data[i].position;
 				self.players[self.getPlayer(data[i].id)].speed = data[i].speed;
 			}

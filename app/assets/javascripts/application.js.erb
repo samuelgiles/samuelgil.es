@@ -44,6 +44,7 @@ function samuelgil_client(){
 	self.container = $("#live-container");
 	self.players = [];
 	self.floor = 0;
+	self.tilt = (typeof window.orientation == 'number' && typeof window.onorientationchange == 'object');
 	self.keyTable = {
 		38: "up",
 		40: "down",
@@ -61,6 +62,8 @@ function samuelgil_client(){
 		$(window).resize(function(){
 			self.resize();
 		});
+
+
 		self.resize();
 
 		soundManager.defaultOptions = {
@@ -229,6 +232,28 @@ function samuelgil_client(){
 		}).keyup(function(e) {
 			self.keyTracker[e.keyCode] = false;
 		});
+
+		if(self.tilt){
+
+			window.ondeviceorientation = function(event) {  
+
+				if(event.gamma < -40){
+					self.keyTracker[37] = true;
+				}
+				else{
+					self.keyTracker[37] = false;
+				}
+				if(event.gamma > 40){
+					self.keyTracker[39] = true;
+				}
+				else{
+					self.keyTracker[39] = false;
+
+				}
+
+			}  
+
+		}
 
 	}
 	self.resize = function(){

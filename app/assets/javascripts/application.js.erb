@@ -102,6 +102,23 @@ function samuelgil_client(){
 
 		});
 
+		$("#controls-chat").click(function(event){
+			event.preventDefault();
+			$("#chat").focus();
+		});
+
+		$("#controls-hide").click(function(event){
+			event.preventDefault();
+			if($("i", this).hasClass("icon-arrow-left")){
+				$("#home").fadeOut("200");
+				$("i", this).removeClass("icon-arrow-left").addClass("icon-arrow-right");
+			}
+			else{
+				$("#home").fadeIn("200");
+				$("i", this).removeClass("icon-arrow-right").addClass("icon-arrow-left");
+			}
+		});
+
 		$("#chat").focus();
 
 	}
